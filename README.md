@@ -1,7 +1,8 @@
 # Java_adv
 Here's a folder of java programs on advanced topics ranging from awt to generics.
 
-**1) ColorMatchingGame**
+**1) ColorMatchingGame**  
+
 The Color Matching Game is a fun and interactive desktop application built using Java Swing. The game challenges users to match a randomly generated color by adjusting RGB sliders. Upon achieving a match, the user is congratulated, and they can restart the game for a new color challenge.
 **Features**
 
