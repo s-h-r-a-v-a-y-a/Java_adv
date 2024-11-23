@@ -4,18 +4,19 @@ import java.awt.event.*;
 import java.util.Random;
 
 public class NumberWordleGame extends JFrame {
-    private static final int NUMBER_LENGTH = 5; // Number size
-    private static final int MAX_ATTEMPTS = 6; // Maximum attempts
+    private static final int NUMBER_LENGTH = 5; // Length of the target number
+    private static final int MAX_ATTEMPTS = 6; // Maximum attempts allowed
 
     private String targetNumber;
     private int attempts;
 
     private final JTextField guessInput = new JTextField(10);
     private final JPanel feedbackPanel = new JPanel();
-    private final JButton guessButton = new JButton("Guess");
+    private final JPanel liveInputPanel = new JPanel();
+    private final JButton checkButton = new JButton("Check");
     private final JButton restartButton = new JButton("Restart");
     private final JLabel attemptsLabel = new JLabel("Attempts: 0/" + MAX_ATTEMPTS);
-    private final JLabel encouragementLabel = new JLabel("You can do this! Focus and guess!");
+    private final JLabel encouragementLabel = new JLabel("Focus and guess the number!");
 
     public NumberWordleGame() {
         initializeGame();
@@ -26,13 +27,18 @@ public class NumberWordleGame extends JFrame {
         targetNumber = generateRandomNumber(NUMBER_LENGTH);
         attempts = 0;
         feedbackPanel.removeAll();
+        liveInputPanel.removeAll();
         feedbackPanel.revalidate();
         feedbackPanel.repaint();
-        guessButton.setEnabled(true);
+        liveInputPanel.revalidate();
+        liveInputPanel.repaint();
+        checkButton.setEnabled(true);
         restartButton.setEnabled(false);
         attemptsLabel.setText("Attempts: 0/" + MAX_ATTEMPTS);
-        encouragementLabel.setText("You can do this! Focus and guess!");
-        System.out.println("Target Number (for testing): " + targetNumber); // Debug info
+        encouragementLabel.setText("Focus and guess the number!");
+        guessInput.setText("");
+        guessInput.requestFocusInWindow();
+        System.out.println("Target Number (for testing): " + targetNumber); // Debugging
     }
 
     private void setupUI() {
@@ -48,7 +54,6 @@ public class NumberWordleGame extends JFrame {
         title.setForeground(new Color(34, 139, 34)); // Green
         headerPanel.add(title, BorderLayout.NORTH);
 
-        // Instructions
         JLabel instructions = new JLabel(
                 "<html>Guess the 5-digit number!<br>Green: Correct and in position, Yellow: Correct but wrong position, Gray: Not in the number.</html>",
                 JLabel.CENTER
@@ -63,20 +68,21 @@ public class NumberWordleGame extends JFrame {
         feedbackPanel.setBorder(BorderFactory.createTitledBorder("Your Attempts"));
         add(feedbackPanel, BorderLayout.CENTER);
 
+        // Live Input Panel
+        liveInputPanel.setLayout(new FlowLayout());
+        liveInputPanel.setBorder(BorderFactory.createTitledBorder("Live Input"));
+        add(liveInputPanel, BorderLayout.WEST);
+
         // Input Panel
         JPanel inputPanel = new JPanel(new FlowLayout());
         guessInput.setFont(new Font("Arial", Font.PLAIN, 16));
         guessInput.setPreferredSize(new Dimension(150, 30));
-        guessButton.setFont(new Font("Arial", Font.BOLD, 14));
+        checkButton.setFont(new Font("Arial", Font.BOLD, 14));
         inputPanel.add(new JLabel("Your Guess:"));
         inputPanel.add(guessInput);
-        inputPanel.add(guessButton);
+        inputPanel.add(checkButton);
 
-        // Encouragement Label
-        encouragementLabel.setHorizontalAlignment(JLabel.CENTER);
-        encouragementLabel.setFont(new Font("Arial", Font.ITALIC, 14));
-        encouragementLabel.setForeground(new Color(30, 144, 255)); // Dodger Blue
-
+        // Bottom Panel
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(attemptsLabel, BorderLayout.NORTH);
         bottomPanel.add(encouragementLabel, BorderLayout.CENTER);
@@ -92,15 +98,28 @@ public class NumberWordleGame extends JFrame {
         add(bottomPanel, BorderLayout.SOUTH);
 
         // Action Listeners
-        guessButton.addActionListener(e -> checkGuess());
+        checkButton.addActionListener(e -> checkGuess());
         restartButton.addActionListener(e -> initializeGame());
+        guessInput.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                updateLiveInput(guessInput.getText());
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    checkGuess();  // Check guess when 'Enter' is pressed
+                }
+            }
+        });
     }
 
     private String generateRandomNumber(int length) {
         Random random = new Random();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
-            sb.append(random.nextInt(10)); // Generate digits 0-9
+            sb.append(random.nextInt(10));
         }
         return sb.toString();
     }
@@ -115,6 +134,7 @@ public class NumberWordleGame extends JFrame {
         attempts++;
         attemptsLabel.setText("Attempts: " + attempts + "/" + MAX_ATTEMPTS);
         JPanel feedbackRow = new JPanel(new FlowLayout());
+
         for (int i = 0; i < NUMBER_LENGTH; i++) {
             char guessedDigit = guess.charAt(i);
             JLabel digitLabel = createFeedbackLabel(guessedDigit, i);
@@ -137,6 +157,7 @@ public class NumberWordleGame extends JFrame {
         }
 
         guessInput.setText("");
+        guessInput.requestFocusInWindow();
     }
 
     private boolean isValidGuess(String guess) {
@@ -164,8 +185,24 @@ public class NumberWordleGame extends JFrame {
         return digitLabel;
     }
 
+    private void updateLiveInput(String currentInput) {
+        liveInputPanel.removeAll();
+        for (int i = 0; i < currentInput.length(); i++) {
+            char digit = currentInput.charAt(i);
+            JLabel liveLabel = new JLabel(String.valueOf(digit));
+            liveLabel.setFont(new Font("Arial", Font.BOLD, 18));
+            liveLabel.setPreferredSize(new Dimension(40, 40));
+            liveLabel.setOpaque(true);
+            liveLabel.setBackground(Color.LIGHT_GRAY);
+            liveLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            liveInputPanel.add(liveLabel);
+        }
+        liveInputPanel.revalidate();
+        liveInputPanel.repaint();
+    }
+
     private void endGame() {
-        guessButton.setEnabled(false);
+        checkButton.setEnabled(false);
         restartButton.setEnabled(true);
     }
 
